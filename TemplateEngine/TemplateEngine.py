@@ -1,4 +1,28 @@
-from Parser import *
+def file_reader(file: str) -> list:
+    '''
+    Takes the template html file and finds all of the variables and instructions for the templating engine. It then outputs these
+    :param file:
+    :return:
+    '''
+    foo = False
+    baz = ""
+    instructions = []
+
+    for i in range(file.__len__()):
+        if file[i] == "{" and file[i+1] == "{":
+            # print("BINGO")
+            foo = True
+            baz = ""
+        if file[i] == "}" and file[i+1] == "}":
+            # print("BINGO OVER")
+            foo = False
+            baz = baz.replace("{{", "")
+            instructions.append(baz)
+
+        if foo:
+            baz += file[i]
+
+    return instructions
 
 
 def parse_html(template: str, variables: dict) -> str:
