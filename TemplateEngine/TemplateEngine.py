@@ -44,11 +44,27 @@ def instruction(i: str) -> list:
     :return:
     """
 
-    instruction_regex = [r'^FOR [(][a-zA-Z]+ in [a-zA-Z]+[)]:$',
-                         r'^RANGE [(][a-zA-Z0-9]+, [a-zA-Z0-9]+[)]$',
-                         r'']
 
-    for r in instruction_regex:
+
+    instruction_regex = [r'^FOR [(][a-zA-Z]+ in [a-zA-Z]+[)]:$', #For Statement
+                         r'^RANGE [(][a-zA-Z0-9]+, [a-zA-Z0-9]+[)]$', #Range (int x, int y)
+                         r'^WHILE [(][a-zA-z]+[)]:S', #While Statement (While condition is true do x)
+                         r'^WHILE [(][a-zA-Z]+ ([=<>]|(>=)|(<=)|(!=)) [a-zA-Z]+[)]:$', #While statement (while var test var is true do x)
+                         r'^[a-zA-Z]+ ([=<>]|(>=)|(<=)|(!=)) [a-zA-Z]+$', #Condtional statement
+                         r'^[0-9]+$', #Matches any number
+                         r'^[a-zA-Z_]+$', #Detects variable names
+                         r'^ENDFOR$', #Detects the end of a for loop
+                         r'^ENDWHILE$', #Detects end of while loop
+                         r'^ENDIF', #Detects end of if statement
+                         r'^ENDELIF$', #Detetcs end of elif statement
+                         r'^ENDELSE$', #detects end of else statement
+                         r'^[=<>]|(>=)|(<=)|(!=)$', #Detects conditional operator signs --Might not need
+                         r'',
+                         ]
+
+
+    for x in range(instruction_regex.__len__()):
+        r = instruction_regex[x]
         match = re.search(r, i)
         if match:
             print(match)
