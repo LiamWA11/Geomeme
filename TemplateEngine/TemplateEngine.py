@@ -85,6 +85,7 @@ def instruction(i: str) -> list:
 
 def execute_instructions(html: str, instructions: list, matched_instructions: list, map: dict) -> str:
     formatted_html = html
+    print(matched_instructions)
 
     blocks = []  # [type, start match index, end match index]
     fcount = 0  # For loop counter - required for nested for loops
@@ -92,26 +93,33 @@ def execute_instructions(html: str, instructions: list, matched_instructions: li
     b = []
 
     def exec_forloop(_m, _fh):
-        print(_m.group(0))
-        print(_m.group(1))
-        print(_m.group(2))
-        print(_m.group(3))
+        # _m = matched instruction
+        # _fh = full html
+
+        key_word = _m.group(2)
+        replaced_text = ""
+
+        # DEBUG INFO FOR REGEX MATCH
+        # print(_m.group(0))
+        # print(_m.group(1))
+        # print(_m.group(2))
+        # print(_m.group(3))
 
         try:
             _list = map[_m.group(3)]
-            print(_list)
+
+            _dum1 = _fh.find("{{" + _m.group(0) + "}}")
+            _dum2 = _fh.find("{{ENDFOR}}") + 10
+
             for member in _list:
-                print(member.NAME)
-                _dum1 = _fh.find("{{"+_m.group(0)+"}}")
-                _dum2 = _fh.find("{{ENDFOR}}") + 10
                 _abc = _fh[_dum1+2+len(_m.group(0))+2:_dum2-10]
-                _abd = _abc.replace(_m.group(1), member.__dict__[_m.group(2)])
-                print(_abc)
-                # return _fh.replace(_fh[_dum1:_dum2], (_abd*len(_list)))
-                # print("aba")
+                text = parse_html(_abc, {key_word:member})
+                replaced_text += text
+
+            _fh_replaced = _fh.replace(_fh[_dum1:_dum2], replaced_text)
         except KeyError:
             print("Key is not in given dictionary")
-        return _fh
+        return _fh_replaced
 
     # Variable replacement ($var)
     def exec_var(_m, _fh):
@@ -125,13 +133,10 @@ def execute_instructions(html: str, instructions: list, matched_instructions: li
 
     # Class Variable Replacement ($$var.var)
     def exec_classvar(_m, _fh):
-        print("\nClass Variable Detected")
-        print(_m.group(2)+"."+_m.group(4))
+        print("\nClass Variable Detected: " + _m.group(2)+"."+_m.group(4))
         try:
-            print(map[_m.group(2)])
             __foo = map[_m.group(2)]
             try:
-                print(__foo.__dict__[(_m.group(4))])
                 return _fh.replace("{{$$"+_m.group(2)+"."+_m.group(4)+"}}", __foo.__dict__[(_m.group(4))])
             except KeyError:
                 print("Not a member of class " + _m.group(2))
@@ -144,8 +149,9 @@ def execute_instructions(html: str, instructions: list, matched_instructions: li
 
     for bar in range(matched_instructions.__len__()):
         m = matched_instructions[bar][0]
-        print("\n"+"Match: " + str(m))
-        print("m(0): '" + str(m.group(0)) +"'")
+        # DEBUG INFORMATION ABOUT REGEX MATCH
+        # print("\n"+"Match: " + str(m))
+        # print("m(0): '" + str(m.group(0)) +"'")
         try:
             if m.group(1) == "FOR":
                 if matched_instructions[bar][3]:
@@ -195,14 +201,6 @@ def execute_instructions(html: str, instructions: list, matched_instructions: li
     except IndexError:
         print("No for loops found")
 
-    print("\n")
-    # print(blocks)
-    # print("\n\n\n")
-    # print(blocks[0][0])
-    # print("\n\n\n")
-    # print(formatted_html)
-    # print(blocks[1])
-
     return formatted_html
 
 
@@ -215,10 +213,7 @@ def parse_html(template: str, variables: dict) -> str:
     """
     instructions = file_reader(template)
     matched_instructions = evaluate_instructions(instructions)
-    print(instructions)
-    print(matched_instructions)
-    print("\n\n")
-    print(execute_instructions(template, instructions, matched_instructions, variables))
+    return execute_instructions(template, instructions, matched_instructions, variables)
 
 
 html = """
@@ -229,10 +224,11 @@ html = """
         <h3>{{$$USER.NAME}}</h3>
         <h4>{{$$USER.DESCRIPTION}}</h4>
     {{ENDFOR}}
-    {{FOR (USER in USERS):}}
-        <h3>{{$$USER.NAME}}</h3>
-        <h4>{{$$USER.DESCRIPTION}}</h4>
+    {{FOR (COMPANY in COMPANIES):}}
+        <h3>{{$$COMPANY.NAME}}</h3>
+        <h4>{{$$COMPANY.DESCRIPTION}}</h4>
     {{ENDFOR}}
+    Timestamp: {{$TIMESTAMP}}
 </html>
 """
 
@@ -249,12 +245,20 @@ class USER:
     def __init__(self):
         self.NAME = "Liam"
         self.USER = "joey"
+        self.DESCRIPTION = "Liam is a very handsome man!"
+
+class COMPANY:
+    def __init__(self):
+        self.NAME = "The Best Company"
+        self.USER = "joey"
+        self.DESCRIPTION = "This is a fantastic company"
 
 x = USER()
 
-user_list = [USER() for baz in range(10)]
+user_list = [USER() for baz in range(3)]
+company_list = [COMPANY() for baz in range(3)]
 
-dictionary = {"TIMESTAMP":"abc", "USER":x, "abc":"The Alphabet", "USERS":user_list}
+dictionary = {"TIMESTAMP":"abc", "USER":x, "abc":"The Alphabet", "USERS":user_list, "COMPANIES":company_list}
 
-parse_html(html, dictionary)
+print(parse_html(html, dictionary))
 #instruction("FOR (a in b):")
