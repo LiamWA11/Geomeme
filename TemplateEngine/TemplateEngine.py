@@ -167,6 +167,8 @@ def execute_instructions(html: str, instructions: list, matched_instructions: li
                 # print(m.group(3))
             elif m.group(1) == "ENDFOR":
                 fcount-=1
+                if fcount==0:
+                    fcount = -1
                 print("For loop ended")
             if m.group(1) == "$":
                 if fcount == 0:
@@ -180,12 +182,14 @@ def execute_instructions(html: str, instructions: list, matched_instructions: li
         except IndexError:
             print("Group not found")
 
+        # var b is list of forloops found in html template b = [[loop 1[instruction 1],[instruction 2]],[loop 2]]
+
         # For Loop Logic
         if fcount > 0:
             print("This object is part of for loop " + str(fcount))
             if b.__len__() < fcount:
                 # print("b.len < fcount (b, b.len, fcount): " + str(b) + " " + str(b.__len__()) + " " + str(fcount))
-                b.append([[m, "a", 1, False]])
+                b.append([m, "a", 1, False])
                 # print("b.len < fcount (b, b.len, fcount): " + str(b) + " " + str(b.__len__()) + " " + str(fcount))
             else:
                 # print(str(b[fcount-1]))
@@ -193,11 +197,14 @@ def execute_instructions(html: str, instructions: list, matched_instructions: li
                 # print(str(b[fcount-1]))
             # print(b)
 
-        if fcount == 0:
+        if fcount == -1:
             blocks.append(b)
+            b = []
+            fcount = 0
 
     try:
-        formatted_html = execute_instructions(formatted_html, instructions, blocks[0][0], map)
+        for block in blocks:
+            formatted_html = execute_instructions(formatted_html, instructions, block, map)
     except IndexError:
         print("No for loops found")
 
@@ -224,11 +231,11 @@ html = """
         <h3>{{$$USER.NAME}}</h3>
         <h4>{{$$USER.DESCRIPTION}}</h4>
     {{ENDFOR}}
+    Timestamp: {{$TIMESTAMP}}
     {{FOR (COMPANY in COMPANIES):}}
         <h3>{{$$COMPANY.NAME}}</h3>
         <h4>{{$$COMPANY.DESCRIPTION}}</h4>
     {{ENDFOR}}
-    Timestamp: {{$TIMESTAMP}}
 </html>
 """
 
